@@ -1,0 +1,14 @@
+E:\Author-Api-Service\src\Library.API\bin\Debug\netcoreapp2.2\Library.API.deps.json
+E:\Author-Api-Service\src\Library.API\bin\Debug\netcoreapp2.2\Library.API.runtimeconfig.json
+E:\Author-Api-Service\src\Library.API\bin\Debug\netcoreapp2.2\Library.API.runtimeconfig.dev.json
+E:\Author-Api-Service\src\Library.API\bin\Debug\netcoreapp2.2\Library.API.dll
+E:\Author-Api-Service\src\Library.API\bin\Debug\netcoreapp2.2\Library.API.pdb
+E:\Author-Api-Service\src\Library.API\obj\Debug\netcoreapp2.2\Library.API.csprojAssemblyReference.cache
+E:\Author-Api-Service\src\Library.API\obj\Debug\netcoreapp2.2\Library.API.csproj.CoreCompileInputs.cache
+E:\Author-Api-Service\src\Library.API\obj\Debug\netcoreapp2.2\Library.API.RazorAssemblyInfo.cache
+E:\Author-Api-Service\src\Library.API\obj\Debug\netcoreapp2.2\Library.API.RazorAssemblyInfo.cs
+E:\Author-Api-Service\src\Library.API\obj\Debug\netcoreapp2.2\Library.API.AssemblyInfoInputs.cache
+E:\Author-Api-Service\src\Library.API\obj\Debug\netcoreapp2.2\Library.API.AssemblyInfo.cs
+E:\Author-Api-Service\src\Library.API\obj\Debug\netcoreapp2.2\Library.API.RazorTargetAssemblyInfo.cache
+E:\Author-Api-Service\src\Library.API\obj\Debug\netcoreapp2.2\Library.API.dll
+E:\Author-Api-Service\src\Library.API\obj\Debug\netcoreapp2.2\Library.API.pdb
