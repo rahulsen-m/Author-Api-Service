@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Library.API.Entities;
+using Library.API.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -28,7 +29,13 @@ namespace Library.API
         public void ConfigureServices(IServiceCollection services)
         {
             //Added the connection string
-            services.AddDbContext<LibraryContext>(options => options.UseSqlServer(Configuration.GetConnectionString("LibraryContext")));
+            // services.AddDbContext<LibraryContext>(options => options.UseSqlServer(Configuration["ConnectionStrings:LibraryContext"]));
+            // services.AddDbContext<LibraryContext>(options =>
+            // options.UseSqlServer(Configuration.GetConnectionString("LibraryContext")));
+            services.AddDbContext<LibraryContext>(options =>
+            options.UseSqlServer("Server=RAHUL-PC;Database=Author_Api;Trusted_Connection=True;MultipleActiveResultSets=true;"));
+            // services.AddDbContext<LibraryContext>(options => options.UseSqlServer(Configuration.GetConnectionString("LibraryContext")));
+            services.AddScoped<ILibraryRepository, LibraryRepository>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
@@ -47,6 +54,7 @@ namespace Library.API
 
             app.UseHttpsRedirection();
             app.UseMvc();
+            DbInitializer.EnsureSeedDataForContext(app);
         }
     }
 }
