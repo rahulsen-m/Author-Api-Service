@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
 namespace Library.API
@@ -54,13 +55,25 @@ namespace Library.API
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             if (env.IsDevelopment())
-            {
+            {                
                 app.UseDeveloperExceptionPage();
             }
             else
             {
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
+
+                // This configuration will write the error message in the response
+                // Global exception handler for the status code 500
+                app.UseExceptionHandler(appBuilder => 
+                {
+                    // Adding action to the context
+                    appBuilder.Run(async context =>
+                    {
+                        context.Response.StatusCode = 500;
+                        await context.Response.WriteAsync("An unexpected fault happend. Please try again.");
+                    });
+                });
             }          
 
             app.UseHttpsRedirection();

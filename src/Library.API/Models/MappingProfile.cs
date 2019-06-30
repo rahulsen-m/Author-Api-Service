@@ -13,6 +13,7 @@ namespace Library.API.Models
                 $"{src.FirstName} {src.LastName}"))
                 .ForMember(dest => dest.Age, opt => opt.MapFrom(src => 
                 src.DateOfBirth.GetCurrentAge()));
+            CreateMap<Book, BookDto>();
         }
     }
 }
