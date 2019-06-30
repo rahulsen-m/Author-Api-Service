@@ -68,7 +68,6 @@ namespace Library.API.Controllers
             }
             var bookToReturn = _mapper.Map<BookDto>(bookEntity);
             return CreatedAtRoute("GetBookForAuthor", new {authorId = bookToReturn.AuthorId, id = bookToReturn.Id}, bookToReturn);
-
         }
     }
 }
