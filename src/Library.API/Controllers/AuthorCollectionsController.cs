@@ -47,7 +47,6 @@ namespace Library.API.Controllers
             return CreatedAtRoute("GetAuthorCollection",
                 new { ids = idsAsString },
                 authorCollectionToReturn);
-            //return Ok();
         }
 
         [HttpGet("({ids})", Name="GetAuthorCollection")]
