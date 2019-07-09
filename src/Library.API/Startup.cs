@@ -30,6 +30,7 @@ namespace Library.API
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
+        [Obsolete]
         public void ConfigureServices(IServiceCollection services)
         {
             //Added the connection string
@@ -57,6 +58,8 @@ namespace Library.API
                 setUpAction.ReturnHttpNotAcceptable = true;
                 // Setting output formatter
                 setUpAction.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
+                // Setting input formatter
+                setUpAction.InputFormatters.Add(new XmlDataContractSerializerInputFormatter());
 
             }).SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }

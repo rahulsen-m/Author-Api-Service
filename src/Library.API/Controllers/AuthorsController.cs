@@ -67,5 +67,23 @@ namespace Library.API.Controllers
             }
             return NotFound();
         }
+
+        [HttpDelete("api/authors/{id}")]
+        public IActionResult DeleteAuthor(Guid id)
+        {
+            var authorFromRepo = _libraryRepository.GetAuthor(id);
+            if (authorFromRepo == null)
+            {
+                return NotFound();
+            }
+            // cascade delete(Delete the associated books)
+            _libraryRepository.DeleteAuthor(authorFromRepo);
+            if (!_libraryRepository.Save())
+            {
+                throw new Exception($"Deleting author {id} failed on save.");
+            }
+            // This return 204 which shows that the the content is deleted.
+            return NoContent();
+        }
     }
 }
