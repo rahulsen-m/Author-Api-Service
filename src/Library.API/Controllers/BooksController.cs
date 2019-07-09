@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using AutoMapper;
+using Library.API.Entities;
 using Library.API.Models;
 using Library.API.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -32,7 +33,7 @@ namespace Library.API.Controllers
             return Ok(books);
         }
 
-        [HttpGet("{Id}")]
+        [HttpGet("{Id}", Name = "GetBookForAuthor")]
         public IActionResult GetBookForAuthor(Guid authorId,Guid id)
         {
             if (!_libraryRepository.AuthorExists(authorId))
@@ -46,6 +47,48 @@ namespace Library.API.Controllers
             }
             var bookDetails = _mapper.Map<BookDto>(booksFromRepository);
             return Ok(bookDetails);
+        }
+
+        [HttpPost]
+        public IActionResult CreateBookForAuthor(Guid authorId,[FromBody] BookForCreationDto book)
+        {
+            if (book == null)
+            {
+                return BadRequest();
+            }
+            if (!_libraryRepository.AuthorExists(authorId))
+            {
+                return NotFound();
+            }
+            var bookEntity = _mapper.Map<Book>(book);
+            _libraryRepository.AddBookForAuthor(authorId, bookEntity);
+            if (!_libraryRepository.Save())
+            {
+                return StatusCode(500, "Error Occurred while adding the book for the author.");
+            }
+            var bookToReturn = _mapper.Map<BookDto>(bookEntity);
+            return CreatedAtRoute("GetBookForAuthor", new {authorId = bookToReturn.AuthorId, id = bookToReturn.Id}, bookToReturn);
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult DeleteBookForAuthors(Guid authorId, Guid id)
+        {
+            if (!_libraryRepository.AuthorExists(authorId))
+            {
+                return NotFound();
+            }
+            var bookForAuthorFromRepo = _libraryRepository.GetBookForAuthor(authorId, id);
+            if (bookForAuthorFromRepo == null)
+            {
+                return NotFound();
+            }
+            _libraryRepository.DeleteBook(bookForAuthorFromRepo);
+            if (!_libraryRepository.Save())
+            {
+                throw new Exception($"Deleting book {id} for author {authorId} failed on save.");
+            }
+            // This signify that the resource is deleted(204)
+            return NoContent();
         }
     }
 }

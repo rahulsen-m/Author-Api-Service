@@ -15,6 +15,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.Options;
 
 namespace Library.API
@@ -29,6 +30,7 @@ namespace Library.API
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
+        [Obsolete]
         public void ConfigureServices(IServiceCollection services)
         {
             //Added the connection string
@@ -48,7 +50,18 @@ namespace Library.API
             IMapper mapper = mappingConfig.CreateMapper();
             services.AddSingleton(mapper);
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            // Set configuration to accept json or xml request type and return the response in the same type
+            services.AddMvc(setUpAction => 
+            {   
+                //Default is false, which means this support all request type and return only in default type(json)
+                // Setting true we can force that to return the response in the specified type(XML)
+                setUpAction.ReturnHttpNotAcceptable = true;
+                // Setting output formatter
+                setUpAction.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
+                // Setting input formatter
+                setUpAction.InputFormatters.Add(new XmlDataContractSerializerInputFormatter());
+
+            }).SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
