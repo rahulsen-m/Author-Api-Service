@@ -4,6 +4,7 @@ using AutoMapper;
 using Library.API.Entities;
 using Library.API.Models;
 using Library.API.Services;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Library.API.Controllers
@@ -105,16 +106,57 @@ namespace Library.API.Controllers
             var bookForAuthorFromRepo = _libraryRepository.GetBookForAuthor(authorId, id);
             if (bookForAuthorFromRepo == null)
             {
-                return NotFound();
+                // if book is not found then adding the book to the author
+                // This process is called upserting where consumer did a put request and server creates a resource without calling the post method
+                var bookToAdd = _mapper.Map<Book>(book);
+                bookToAdd.Id = id;
+                _libraryRepository.AddBookForAuthor(authorId, bookToAdd);
+                if (!_libraryRepository.Save())
+                {
+                    throw new Exception($"Upserting book {id} for author {authorId} failed to save.");
+                }
+                var bookToReturn = _mapper.Map<BookDto>(bookToAdd);
+                return CreatedAtRoute("GetBookForAuthor", new {authorId = authorId, id = bookToReturn.Id}, bookToReturn);
             }
             // map to the dto
-            // Apply the update
+            // Apply the update 
             // Map back to entity
             _mapper.Map(book, bookForAuthorFromRepo);
             _libraryRepository.UpdateBookForAuthor(bookForAuthorFromRepo);
             if (!_libraryRepository.Save())
             {
                 throw new Exception($"Updating book {id} for author {authorId} failed on save.");
+            }
+            return Ok();
+        }
+
+        [HttpPatch("{id}")]
+        public IActionResult PartiallyUpdateBookForAuthor(Guid authorId, Guid id, 
+                [FromBody] JsonPatchDocument<BookForUpdateDto> patchDocument)
+        {
+            if (patchDocument == null)
+            {
+                return BadRequest();
+            }
+            if (!_libraryRepository.AuthorExists(authorId))
+            {
+                return NotFound();
+            }
+            var booksFromRepository = _libraryRepository.GetBookForAuthor(authorId, id);
+            if (booksFromRepository == null)
+            {
+                return NotFound();
+            }
+            // mapped book to BookForUpdateDto
+            var bookToPatch = _mapper.Map<BookForUpdateDto>(booksFromRepository);
+            // apply the patch instruction to the BookForUpdateDto object 
+            patchDocument.ApplyTo(bookToPatch);
+            // apply the bookToPatch changes to booksFromRepository to save in the db
+            _mapper.Map(bookToPatch, booksFromRepository);
+            _libraryRepository.UpdateBookForAuthor(booksFromRepository);
+            if (!_libraryRepository.Save())
+            {
+                throw new Exception($"Patching book {id} for author {authorId} is failed to save.");
             }
             return Ok();
         }

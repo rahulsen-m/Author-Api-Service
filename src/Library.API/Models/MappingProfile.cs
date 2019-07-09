@@ -17,6 +17,7 @@ namespace Library.API.Models
             CreateMap<AuthorForCreationDto, Author>();
             CreateMap<BookForCreationDto, Book>();
             CreateMap<BookForUpdateDto, Book>();
+            CreateMap<Book, BookForUpdateDto>();
         }
     }
 }
