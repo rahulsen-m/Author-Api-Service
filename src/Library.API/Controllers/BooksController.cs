@@ -110,6 +110,14 @@ namespace Library.API.Controllers
             {
                 return BadRequest();
             }
+            if (book.Description == book.Title)
+            {
+                ModelState.AddModelError(nameof(BookForUpdateDto), "The description should be different from the book title.");
+            }
+            if (!ModelState.IsValid)
+            {
+                return new UnProcessableEntityObjectResult(ModelState);
+            }
             if (!_libraryRepository.AuthorExists(authorId))
             {
                 return NotFound();
@@ -159,7 +167,16 @@ namespace Library.API.Controllers
                 // return NotFound();
                 // Upserting using patch method(Its just for demonstration purpose)
                 var bookDto = new BookForUpdateDto();
-                patchDocument.ApplyTo(bookDto);
+                patchDocument.ApplyTo(bookDto, ModelState);
+                if (bookDto.Description == bookDto.Title)
+                {
+                    ModelState.AddModelError(nameof(BookForUpdateDto), "The description must be different form the book title.");
+                }
+                TryValidateModel(bookDto);
+                if (!ModelState.IsValid)
+                {
+                    return new UnProcessableEntityObjectResult(ModelState);
+                }
                 var bookToAdd = _mapper.Map<Book>(bookDto);
                 bookToAdd.Id = id;
                 _libraryRepository.AddBookForAuthor(authorId, bookToAdd);
@@ -173,7 +190,16 @@ namespace Library.API.Controllers
             // mapped book to BookForUpdateDto
             var bookToPatch = _mapper.Map<BookForUpdateDto>(booksFromRepository);
             // apply the patch instruction to the BookForUpdateDto object 
-            patchDocument.ApplyTo(bookToPatch);
+            patchDocument.ApplyTo(bookToPatch, ModelState);
+            if(bookToPatch.Description == bookToPatch.Title)
+            {
+                ModelState.AddModelError(nameof(BookForUpdateDto), "The description must be different form the book title.");
+            }
+            TryValidateModel(bookToPatch);
+            if (!ModelState.IsValid)
+            {
+                return new UnProcessableEntityObjectResult(ModelState);
+            }
             // apply the bookToPatch changes to booksFromRepository to save in the db
             _mapper.Map(bookToPatch, booksFromRepository);
             _libraryRepository.UpdateBookForAuthor(booksFromRepository);
