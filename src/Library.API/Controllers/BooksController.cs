@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using AutoMapper;
 using Library.API.Entities;
+using Library.API.Helpers;
 using Library.API.Models;
 using Library.API.Services;
 using Microsoft.AspNetCore.JsonPatch;
@@ -56,6 +57,16 @@ namespace Library.API.Controllers
             if (book == null)
             {
                 return BadRequest();
+            }
+            // Add custom rule and add that to the model state
+            if (book.Title == book.Description)
+            {
+                ModelState.AddModelError(nameof(BookForCreationDto), "The description should be different from the book title.");
+            }
+            if (!ModelState.IsValid)
+            {
+                // retrun 422[Un-Processable entity]
+                return new UnProcessableEntityObjectResult(ModelState);
             }
             if (!_libraryRepository.AuthorExists(authorId))
             {

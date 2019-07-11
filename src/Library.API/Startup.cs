@@ -62,6 +62,12 @@ namespace Library.API
                 setUpAction.InputFormatters.Add(new XmlDataContractSerializerInputFormatter());
 
             }).SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+
+            // Disable automatic model state validation before comes into the controller
+            services.Configure<ApiBehaviorOptions>(options => 
+            {
+                options.SuppressModelStateInvalidFilter = true;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
