@@ -19,6 +19,8 @@ using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Diagnostics;
 using NLog.Extensions.Logging;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Routing;
 
 namespace Library.API
 {
@@ -43,7 +45,17 @@ namespace Library.API
             options.UseSqlServer("Server=RAHUL-PC;Database=Author_Api;Trusted_Connection=True;MultipleActiveResultSets=true;"));
             // services.AddDbContext<LibraryContext>(options => options.UseSqlServer(Configuration.GetConnectionString("LibraryContext")));
             services.AddScoped<ILibraryRepository, LibraryRepository>();
-            
+            // UrlHelper helps to generate the uri to the action (in the current context) thats why we are adding this service
+            // services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
+
+            // register this service to add metadata url in the response header
+            // Configure to use IActionContextAccessor and tell the controller how this should be constructed
+            // services.AddScoped<IUrlHelper, UrlHelper>(implementationFactory => 
+            // {
+            //     // Get the instance of the action context accessor
+            //     var actionContext = implementationFactory.GetService<IActionContextAccessor>().ActionContext;
+            //     return new UrlHelper(actionContext);
+            // });
             // Auto Mapper Configurations
             var mappingConfig = new MapperConfiguration(mc =>
             {
@@ -61,7 +73,7 @@ namespace Library.API
                 // Setting output formatter
                 setUpAction.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
                 // Setting input formatter
-                setUpAction.InputFormatters.Add(new XmlDataContractSerializerInputFormatter());
+                //setUpAction.InputFormatters.Add(new XmlDataContractSerializerInputFormatter());
 
             }).SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 

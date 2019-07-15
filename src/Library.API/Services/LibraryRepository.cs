@@ -65,12 +65,10 @@ namespace Library.API.Services
             return _context.Authors.FirstOrDefault(a => a.Id == authorId);
         }
 
-        public IEnumerable<Author> GetAuthors(AuthorResourceParameters authorResourceParameters)
+        public PageList<Author> GetAuthors(AuthorResourceParameters authorResourceParameters)
         {
-            return _context.Authors.OrderBy(a => a.FirstName).ThenBy(a => a.LastName)
-                    .Skip(authorResourceParameters.PageSize * (authorResourceParameters.PageNumber - 1))
-                    .Take(authorResourceParameters.PageSize)
-                    .ToList();
+            var collectionBeforePaging = _context.Authors.OrderBy(n => n.FirstName).ThenBy(n => n.LastName);
+            return PageList<Author>.Create(collectionBeforePaging, authorResourceParameters.PageNumber, authorResourceParameters.PageSize);
         }
 
         public IEnumerable<Author> GetAuthors(IEnumerable<Guid> authorIds)

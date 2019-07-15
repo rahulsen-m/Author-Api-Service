@@ -7,6 +7,7 @@ using Library.API.Models;
 using Library.API.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace Library.API.Controllers
 {
@@ -16,17 +17,39 @@ namespace Library.API.Controllers
         // Create a field to store the mapper object
         private readonly IMapper _mapper;
         private ILibraryRepository _libraryRepository;
+        // private IUrlHelper _urlHelper;
         
         public  AuthorsController(ILibraryRepository libraryRepository, IMapper mapper)
         {
             _libraryRepository = libraryRepository;
             _mapper = mapper;
+            // _urlHelper = urlHelper;
         }
 
-        [HttpGet("api/authors")]
+        [HttpGet("api/authors", Name = "GetAuthors")]
         //[FromQuery] int pageNumber, [FromQuery] int pageSize = 10 can be used as parameter
         public IActionResult GetAuthors([FromQuery] AuthorResourceParameters authorResourceParameters){
             var authorFromRepository = _libraryRepository.GetAuthors(authorResourceParameters);
+            var previousPageLink = authorFromRepository.HasPreviousPage ? CreateAuthorResourceUri(
+                authorResourceParameters, ResourceUriType.PreviousPage
+            ) : null;
+
+            var nextPageLink = authorFromRepository.HasNextPage ? CreateAuthorResourceUri(
+                authorResourceParameters, ResourceUriType.NextPage
+            ) : null;
+
+            // Metadata
+            var paginationMetadata = new
+            {
+                totalCount = authorFromRepository.TotalCount,
+                pageSize = authorFromRepository.PageSize,
+                currentPage = authorFromRepository.CurrentPage,
+                totalPages = authorFromRepository.TotalPages,
+                previousLink = previousPageLink,
+                nextLink = nextPageLink
+            };
+            // Adding custom header to the response
+            Response.Headers.Add("X-Pagination",JsonConvert.SerializeObject(paginationMetadata));
             var authors = _mapper.Map<IEnumerable<AuthorDto>>(authorFromRepository);
             return Ok(authors);
         }
@@ -86,5 +109,34 @@ namespace Library.API.Controllers
             // This return 204 which shows that the the content is deleted.
             return NoContent();
         }
+
+        #region Private Methods
+
+        private string CreateAuthorResourceUri(AuthorResourceParameters authorResourceParameter, ResourceUriType type)
+        {
+            switch (type)
+            {
+                case ResourceUriType.PreviousPage:
+                    return this.Url.Link("GetAuthors",
+                    new {
+                        PageNumber = authorResourceParameter.PageNumber - 1,
+                        PageSize = authorResourceParameter.PageSize
+                    });
+                case ResourceUriType.NextPage:
+                    return this.Url.Link("GetAuthors",
+                    new {
+                        PageNumber = authorResourceParameter.PageNumber + 1,
+                        PageSize = authorResourceParameter.PageSize
+                    });
+                default:
+                    return this.Url.Link("GetAuthors",
+                    new {
+                        PageNumber = authorResourceParameter.PageNumber,
+                        PageSize = authorResourceParameter.PageSize
+                    });
+            }
+        }
+
+        #endregion
     }
 }
