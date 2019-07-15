@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using Library.API.Entities;
+using Library.API.Helpers;
 
 namespace Library.API.Services
 {
     public interface ILibraryRepository
     {
-        IEnumerable<Author> GetAuthors();
+        IEnumerable<Author> GetAuthors(AuthorResourceParameters authorResourceParameters);
         Author GetAuthor(Guid authorId);
         IEnumerable<Author> GetAuthors(IEnumerable<Guid> authorIds);
         void AddAuthor(Author author);

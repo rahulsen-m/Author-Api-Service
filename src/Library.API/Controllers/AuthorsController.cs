@@ -16,16 +16,17 @@ namespace Library.API.Controllers
         // Create a field to store the mapper object
         private readonly IMapper _mapper;
         private ILibraryRepository _libraryRepository;
-
-        public AuthorsController(ILibraryRepository libraryRepository, IMapper mapper)
+        
+        public  AuthorsController(ILibraryRepository libraryRepository, IMapper mapper)
         {
             _libraryRepository = libraryRepository;
             _mapper = mapper;
         }
 
         [HttpGet("api/authors")]
-        public IActionResult GetAuthors(){
-            var authorFromRepository = _libraryRepository.GetAuthors();
+        //[FromQuery] int pageNumber, [FromQuery] int pageSize = 10 can be used as parameter
+        public IActionResult GetAuthors([FromQuery] AuthorResourceParameters authorResourceParameters){
+            var authorFromRepository = _libraryRepository.GetAuthors(authorResourceParameters);
             var authors = _mapper.Map<IEnumerable<AuthorDto>>(authorFromRepository);
             return Ok(authors);
         }
