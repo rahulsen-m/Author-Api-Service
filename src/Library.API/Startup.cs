@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using AutoMapper;
 using Library.API.Entities;
 using Library.API.Models;
 using Library.API.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -16,11 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Formatters;
-using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Diagnostics;
-using NLog.Extensions.Logging;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc.Routing;
 
 namespace Library.API
 {
@@ -45,17 +37,7 @@ namespace Library.API
             options.UseSqlServer("Server=RAHUL-PC;Database=Author_Api;Trusted_Connection=True;MultipleActiveResultSets=true;"));
             // services.AddDbContext<LibraryContext>(options => options.UseSqlServer(Configuration.GetConnectionString("LibraryContext")));
             services.AddScoped<ILibraryRepository, LibraryRepository>();
-            // UrlHelper helps to generate the uri to the action (in the current context) thats why we are adding this service
-            // services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
-
-            // register this service to add metadata url in the response header
-            // Configure to use IActionContextAccessor and tell the controller how this should be constructed
-            // services.AddScoped<IUrlHelper, UrlHelper>(implementationFactory => 
-            // {
-            //     // Get the instance of the action context accessor
-            //     var actionContext = implementationFactory.GetService<IActionContextAccessor>().ActionContext;
-            //     return new UrlHelper(actionContext);
-            // });
+            services.AddTransient<IPropertyMappingService, PropertyMappingService>();
             // Auto Mapper Configurations
             var mappingConfig = new MapperConfiguration(mc =>
             {

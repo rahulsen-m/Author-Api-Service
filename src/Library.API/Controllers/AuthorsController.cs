@@ -16,19 +16,24 @@ namespace Library.API.Controllers
     {
         // Create a field to store the mapper object
         private readonly IMapper _mapper;
+        private readonly IPropertyMappingService _propertyMappingService;
         private ILibraryRepository _libraryRepository;
-        // private IUrlHelper _urlHelper;
         
-        public  AuthorsController(ILibraryRepository libraryRepository, IMapper mapper)
+        public  AuthorsController(ILibraryRepository libraryRepository, IMapper mapper, IPropertyMappingService propertyMappingService)
         {
             _libraryRepository = libraryRepository;
             _mapper = mapper;
-            // _urlHelper = urlHelper;
+            _propertyMappingService = propertyMappingService;
         }
 
         [HttpGet("api/authors", Name = "GetAuthors")]
         //[FromQuery] int pageNumber, [FromQuery] int pageSize = 10 can be used as parameter
         public IActionResult GetAuthors([FromQuery] AuthorResourceParameters authorResourceParameters){
+            if (!_propertyMappingService.ValidMappingExistsFor<AuthorDto, Author>
+               (authorResourceParameters.OrderBy))
+            {
+                return BadRequest();
+            }
             var authorFromRepository = _libraryRepository.GetAuthors(authorResourceParameters);
             var previousPageLink = authorFromRepository.HasPreviousPage ? CreateAuthorResourceUri(
                 authorResourceParameters, ResourceUriType.PreviousPage
@@ -119,18 +124,27 @@ namespace Library.API.Controllers
                 case ResourceUriType.PreviousPage:
                     return this.Url.Link("GetAuthors",
                     new {
+                        orderBy = authorResourceParameter.OrderBy,
+                        searchQuery = authorResourceParameter.SearchQuery,
+                        genre = authorResourceParameter.Genre,
                         PageNumber = authorResourceParameter.PageNumber - 1,
                         PageSize = authorResourceParameter.PageSize
                     });
                 case ResourceUriType.NextPage:
                     return this.Url.Link("GetAuthors",
                     new {
+                        orderBy = authorResourceParameter.OrderBy,
+                        searchQuery = authorResourceParameter.SearchQuery,
+                        genre = authorResourceParameter.Genre,
                         PageNumber = authorResourceParameter.PageNumber + 1,
                         PageSize = authorResourceParameter.PageSize
                     });
                 default:
                     return this.Url.Link("GetAuthors",
                     new {
+                        orderBy = authorResourceParameter.OrderBy,
+                        searchQuery = authorResourceParameter.SearchQuery,
+                        genre = authorResourceParameter.Genre,
                         PageNumber = authorResourceParameter.PageNumber,
                         PageSize = authorResourceParameter.PageSize
                     });
