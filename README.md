@@ -45,6 +45,7 @@ We will add the following features/tools in the application
 - Logger
 - Swagger
 - Docker
+- CI & CD pipeline
 
 # Getting Started
 
