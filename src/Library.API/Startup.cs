@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using AutoMapper;
 using Library.API.Entities;
 using Library.API.Models;
 using Library.API.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -16,9 +12,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Formatters;
-using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Diagnostics;
-using NLog.Extensions.Logging;
+using Newtonsoft.Json.Serialization;
 
 namespace Library.API
 {
@@ -43,7 +38,8 @@ namespace Library.API
             options.UseSqlServer("Server=RAHUL-PC;Database=Author_Api;Trusted_Connection=True;MultipleActiveResultSets=true;"));
             // services.AddDbContext<LibraryContext>(options => options.UseSqlServer(Configuration.GetConnectionString("LibraryContext")));
             services.AddScoped<ILibraryRepository, LibraryRepository>();
-            
+            services.AddTransient<IPropertyMappingService, PropertyMappingService>();
+            services.AddTransient<ITypeHelperService, TypeHelperService>();
             // Auto Mapper Configurations
             var mappingConfig = new MapperConfiguration(mc =>
             {
@@ -61,8 +57,12 @@ namespace Library.API
                 // Setting output formatter
                 setUpAction.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
                 // Setting input formatter
-                setUpAction.InputFormatters.Add(new XmlDataContractSerializerInputFormatter());
+                //setUpAction.InputFormatters.Add(new XmlDataContractSerializerInputFormatter());
 
+            })
+            .AddJsonOptions(options => {
+                options.SerializerSettings.ContractResolver = 
+                new CamelCasePropertyNamesContractResolver();
             }).SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             // Disable automatic model state validation before comes into the controller
