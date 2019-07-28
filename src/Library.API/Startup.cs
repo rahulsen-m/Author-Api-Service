@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.Diagnostics;
+using Newtonsoft.Json.Serialization;
 
 namespace Library.API
 {
@@ -38,6 +39,7 @@ namespace Library.API
             // services.AddDbContext<LibraryContext>(options => options.UseSqlServer(Configuration.GetConnectionString("LibraryContext")));
             services.AddScoped<ILibraryRepository, LibraryRepository>();
             services.AddTransient<IPropertyMappingService, PropertyMappingService>();
+            services.AddTransient<ITypeHelperService, TypeHelperService>();
             // Auto Mapper Configurations
             var mappingConfig = new MapperConfiguration(mc =>
             {
@@ -57,6 +59,10 @@ namespace Library.API
                 // Setting input formatter
                 //setUpAction.InputFormatters.Add(new XmlDataContractSerializerInputFormatter());
 
+            })
+            .AddJsonOptions(options => {
+                options.SerializerSettings.ContractResolver = 
+                new CamelCasePropertyNamesContractResolver();
             }).SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             // Disable automatic model state validation before comes into the controller

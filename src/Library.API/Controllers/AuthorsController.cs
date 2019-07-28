@@ -17,13 +17,15 @@ namespace Library.API.Controllers
         // Create a field to store the mapper object
         private readonly IMapper _mapper;
         private readonly IPropertyMappingService _propertyMappingService;
+        private readonly ITypeHelperService _typeHelperSevice;
         private ILibraryRepository _libraryRepository;
         
-        public  AuthorsController(ILibraryRepository libraryRepository, IMapper mapper, IPropertyMappingService propertyMappingService)
+        public  AuthorsController(ILibraryRepository libraryRepository, IMapper mapper, IPropertyMappingService propertyMappingService, ITypeHelperService typeHelperService)
         {
             _libraryRepository = libraryRepository;
             _mapper = mapper;
             _propertyMappingService = propertyMappingService;
+            _typeHelperSevice = typeHelperService;
         }
 
         [HttpGet("api/authors", Name = "GetAuthors")]
@@ -31,6 +33,10 @@ namespace Library.API.Controllers
         public IActionResult GetAuthors([FromQuery] AuthorResourceParameters authorResourceParameters){
             if (!_propertyMappingService.ValidMappingExistsFor<AuthorDto, Author>
                (authorResourceParameters.OrderBy))
+            {
+                return BadRequest();
+            }
+            if (!_typeHelperSevice.TypeHasPropertires<AuthorDto>(authorResourceParameters.Fields))
             {
                 return BadRequest();
             }
@@ -56,18 +62,22 @@ namespace Library.API.Controllers
             // Adding custom header to the response
             Response.Headers.Add("X-Pagination",JsonConvert.SerializeObject(paginationMetadata));
             var authors = _mapper.Map<IEnumerable<AuthorDto>>(authorFromRepository);
-            return Ok(authors);
+            return Ok(authors.ShapData(authorResourceParameters.Fields));
         }
 
         [HttpGet("api/authors/{id}", Name = "GetAuthor")]
-        public IActionResult GetAuthors(Guid Id){
+        public IActionResult GetAuthors(Guid Id, [FromQuery] string fields){
+            if (!_typeHelperSevice.TypeHasPropertires<AuthorDto>(fields))
+            {
+                return BadRequest();
+            }
             var authorFromRepo = _libraryRepository.GetAuthor(Id);
             if (authorFromRepo == null)
             {
                 return NotFound();
             }
             var author = _mapper.Map<AuthorDto>(authorFromRepo);
-            return Ok(author);
+            return Ok(author.ShapeData(fields));
         }
 
         [HttpPost("api/authors")]
@@ -124,6 +134,7 @@ namespace Library.API.Controllers
                 case ResourceUriType.PreviousPage:
                     return this.Url.Link("GetAuthors",
                     new {
+                        fields = authorResourceParameter.Fields,
                         orderBy = authorResourceParameter.OrderBy,
                         searchQuery = authorResourceParameter.SearchQuery,
                         genre = authorResourceParameter.Genre,
@@ -133,6 +144,7 @@ namespace Library.API.Controllers
                 case ResourceUriType.NextPage:
                     return this.Url.Link("GetAuthors",
                     new {
+                        fields = authorResourceParameter.Fields,
                         orderBy = authorResourceParameter.OrderBy,
                         searchQuery = authorResourceParameter.SearchQuery,
                         genre = authorResourceParameter.Genre,
@@ -142,6 +154,7 @@ namespace Library.API.Controllers
                 default:
                     return this.Url.Link("GetAuthors",
                     new {
+                        fields = authorResourceParameter.Fields,
                         orderBy = authorResourceParameter.OrderBy,
                         searchQuery = authorResourceParameter.SearchQuery,
                         genre = authorResourceParameter.Genre,
