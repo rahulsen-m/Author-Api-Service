@@ -7,6 +7,7 @@ using Library.API.Models;
 using Library.API.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace Library.API.Controllers
 {
@@ -15,30 +16,68 @@ namespace Library.API.Controllers
     {
         // Create a field to store the mapper object
         private readonly IMapper _mapper;
+        private readonly IPropertyMappingService _propertyMappingService;
+        private readonly ITypeHelperService _typeHelperSevice;
         private ILibraryRepository _libraryRepository;
-
-        public AuthorsController(ILibraryRepository libraryRepository, IMapper mapper)
+        
+        public  AuthorsController(ILibraryRepository libraryRepository, IMapper mapper, IPropertyMappingService propertyMappingService, ITypeHelperService typeHelperService)
         {
             _libraryRepository = libraryRepository;
             _mapper = mapper;
+            _propertyMappingService = propertyMappingService;
+            _typeHelperSevice = typeHelperService;
         }
 
-        [HttpGet("api/authors")]
-        public IActionResult GetAuthors(){
-            var authorFromRepository = _libraryRepository.GetAuthors();
+        [HttpGet("api/authors", Name = "GetAuthors")]
+        //[FromQuery] int pageNumber, [FromQuery] int pageSize = 10 can be used as parameter
+        public IActionResult GetAuthors([FromQuery] AuthorResourceParameters authorResourceParameters){
+            if (!_propertyMappingService.ValidMappingExistsFor<AuthorDto, Author>
+               (authorResourceParameters.OrderBy))
+            {
+                return BadRequest();
+            }
+            if (!_typeHelperSevice.TypeHasPropertires<AuthorDto>(authorResourceParameters.Fields))
+            {
+                return BadRequest();
+            }
+            var authorFromRepository = _libraryRepository.GetAuthors(authorResourceParameters);
+            var previousPageLink = authorFromRepository.HasPreviousPage ? CreateAuthorResourceUri(
+                authorResourceParameters, ResourceUriType.PreviousPage
+            ) : null;
+
+            var nextPageLink = authorFromRepository.HasNextPage ? CreateAuthorResourceUri(
+                authorResourceParameters, ResourceUriType.NextPage
+            ) : null;
+
+            // Metadata
+            var paginationMetadata = new
+            {
+                totalCount = authorFromRepository.TotalCount,
+                pageSize = authorFromRepository.PageSize,
+                currentPage = authorFromRepository.CurrentPage,
+                totalPages = authorFromRepository.TotalPages,
+                previousLink = previousPageLink,
+                nextLink = nextPageLink
+            };
+            // Adding custom header to the response
+            Response.Headers.Add("X-Pagination",JsonConvert.SerializeObject(paginationMetadata));
             var authors = _mapper.Map<IEnumerable<AuthorDto>>(authorFromRepository);
-            return Ok(authors);
+            return Ok(authors.ShapData(authorResourceParameters.Fields));
         }
 
         [HttpGet("api/authors/{id}", Name = "GetAuthor")]
-        public IActionResult GetAuthors(Guid Id){
+        public IActionResult GetAuthors(Guid Id, [FromQuery] string fields){
+            if (!_typeHelperSevice.TypeHasPropertires<AuthorDto>(fields))
+            {
+                return BadRequest();
+            }
             var authorFromRepo = _libraryRepository.GetAuthor(Id);
             if (authorFromRepo == null)
             {
                 return NotFound();
             }
             var author = _mapper.Map<AuthorDto>(authorFromRepo);
-            return Ok(author);
+            return Ok(author.ShapeData(fields));
         }
 
         [HttpPost("api/authors")]
@@ -85,5 +124,46 @@ namespace Library.API.Controllers
             // This return 204 which shows that the the content is deleted.
             return NoContent();
         }
+
+        #region Private Methods
+
+        private string CreateAuthorResourceUri(AuthorResourceParameters authorResourceParameter, ResourceUriType type)
+        {
+            switch (type)
+            {
+                case ResourceUriType.PreviousPage:
+                    return this.Url.Link("GetAuthors",
+                    new {
+                        fields = authorResourceParameter.Fields,
+                        orderBy = authorResourceParameter.OrderBy,
+                        searchQuery = authorResourceParameter.SearchQuery,
+                        genre = authorResourceParameter.Genre,
+                        PageNumber = authorResourceParameter.PageNumber - 1,
+                        PageSize = authorResourceParameter.PageSize
+                    });
+                case ResourceUriType.NextPage:
+                    return this.Url.Link("GetAuthors",
+                    new {
+                        fields = authorResourceParameter.Fields,
+                        orderBy = authorResourceParameter.OrderBy,
+                        searchQuery = authorResourceParameter.SearchQuery,
+                        genre = authorResourceParameter.Genre,
+                        PageNumber = authorResourceParameter.PageNumber + 1,
+                        PageSize = authorResourceParameter.PageSize
+                    });
+                default:
+                    return this.Url.Link("GetAuthors",
+                    new {
+                        fields = authorResourceParameter.Fields,
+                        orderBy = authorResourceParameter.OrderBy,
+                        searchQuery = authorResourceParameter.SearchQuery,
+                        genre = authorResourceParameter.Genre,
+                        PageNumber = authorResourceParameter.PageNumber,
+                        PageSize = authorResourceParameter.PageSize
+                    });
+            }
+        }
+
+        #endregion
     }
 }
