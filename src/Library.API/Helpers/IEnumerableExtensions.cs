@@ -7,7 +7,7 @@ namespace Library.API.Helpers
 {
     public static class IEnumerableExtensions 
     {
-        public static IEnumerable<ExpandoObject> ShapData<TSource>(
+        public static IEnumerable<ExpandoObject> ShapeData<TSource>(
                 this IEnumerable<TSource> source,
                 string fields)
         {
