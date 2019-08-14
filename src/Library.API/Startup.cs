@@ -14,6 +14,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.Diagnostics;
 using Newtonsoft.Json.Serialization;
+using Swashbuckle.AspNetCore.Swagger;
+using System.Reflection;
+using System.IO;
 
 namespace Library.API
 {
@@ -70,6 +73,29 @@ namespace Library.API
             {
                 options.SuppressModelStateInvalidFilter = true;
             });
+
+            // Register the Swagger generator, defining 1 or more Swagger documents
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Info { 
+                    Title = "Author & Book service API", 
+                    Version = "v1",
+                    Description = "This is dummy API application for author and book service. This project is based on the REST architecture.",
+                    Contact = new Contact
+                    {
+                        Name = "Rahul Sen",
+                        Email = "rsen253@hotmail.com"
+                    },
+                    License = new License
+                    {
+                        Name = "Public - Mindfire",
+                    }
+                });
+                // Set the comments path for the Swagger JSON and UI.
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                c.IncludeXmlComments(xmlPath);
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -110,6 +136,11 @@ namespace Library.API
 
             app.UseHttpsRedirection();
             app.UseMvc();
+            app.UseSwagger();
+            app.UseSwaggerUI(c => {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "post API V1");
+                c.RoutePrefix = string.Empty;
+            });
             DbInitializer.EnsureSeedDataForContext(app);
         }
     }
