@@ -20,6 +20,13 @@ namespace Library.API.Controllers
         private readonly ITypeHelperService _typeHelperSevice;
         private ILibraryRepository _libraryRepository;
         
+        /// <summary>
+        /// Author constructor
+        /// </summary>
+        /// <param name="libraryRepository">libraryRepository</param>
+        /// <param name="mapper">automapper</param>
+        /// <param name="propertyMappingService">property mapping service</param>
+        /// <param name="typeHelperService">type helper service</param>
         public  AuthorsController(ILibraryRepository libraryRepository, IMapper mapper, IPropertyMappingService propertyMappingService, ITypeHelperService typeHelperService)
         {
             _libraryRepository = libraryRepository;
@@ -27,7 +34,12 @@ namespace Library.API.Controllers
             _propertyMappingService = propertyMappingService;
             _typeHelperSevice = typeHelperService;
         }
-
+        
+        /// <summary>
+        /// Get the authors 
+        /// </summary>
+        /// <param name="authorResourceParameters">author resource parameter</param>
+        /// <returns>All author details</returns>
         [HttpGet("api/authors", Name = "GetAuthors")]
         //[FromQuery] int pageNumber, [FromQuery] int pageSize = 10 can be used as parameter
         public IActionResult GetAuthors([FromQuery] AuthorResourceParameters authorResourceParameters){
