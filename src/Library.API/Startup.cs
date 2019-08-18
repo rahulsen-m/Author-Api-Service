@@ -17,6 +17,7 @@ using Newtonsoft.Json.Serialization;
 using Swashbuckle.AspNetCore.Swagger;
 using System.Reflection;
 using System.IO;
+using System.Linq;
 
 namespace Library.API
 {
@@ -62,6 +63,12 @@ namespace Library.API
                 // Setting input formatter
                 //setUpAction.InputFormatters.Add(new XmlDataContractSerializerInputFormatter());
 
+                // configure custom output header
+                var jsonOutputFormatter = setUpAction.OutputFormatters.OfType<JsonOutputFormatter>().FirstOrDefault();
+                if (jsonOutputFormatter != null)
+                {
+                    jsonOutputFormatter.SupportedMediaTypes.Add("application/vnd.marvin.hateoas+json") ;
+                }
             })
             .AddJsonOptions(options => {
                 options.SerializerSettings.ContractResolver = 
