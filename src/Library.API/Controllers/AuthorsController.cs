@@ -43,7 +43,8 @@ namespace Library.API.Controllers
         /// <returns>All author details</returns>
         [HttpGet("api/authors", Name = "GetAuthors")]
         //[FromQuery] int pageNumber, [FromQuery] int pageSize = 10 can be used as parameter
-        public IActionResult GetAuthors([FromQuery] AuthorResourceParameters authorResourceParameters){
+        public IActionResult GetAuthors([FromQuery] AuthorResourceParameters authorResourceParameters,
+                                        [FromHeader(Name = "Accept")] string mediaType){
             if (!_propertyMappingService.ValidMappingExistsFor<AuthorDto, Author>
                (authorResourceParameters.OrderBy))
             {
@@ -76,27 +77,54 @@ namespace Library.API.Controllers
             Response.Headers.Add("X-Pagination",JsonConvert.SerializeObject(paginationMetadata));
             var authors = _mapper.Map<IEnumerable<AuthorDto>>(authorFromRepository);
 
-            var links = CreateLinksForAuthors(authorResourceParameters,
+            if(mediaType == "application/vnd.rahul.hateoas+json"){
+                var links = CreateLinksForAuthors(authorResourceParameters,
                 authorFromRepository.HasNextPage, authorFromRepository.HasPreviousPage);
-            var shapedAuthors = authors.ShapeData(authorResourceParameters.Fields);
-            var shapedAuthorsWithLinks = shapedAuthors.Select(author =>
-            {
-                var authorAsDictionary = author as IDictionary<string, object>;
-                var authorLinks = CreateLinksForAuthor(
-                    (Guid)authorAsDictionary["Id"], authorResourceParameters.Fields);
+                var shapedAuthors = authors.ShapeData(authorResourceParameters.Fields);
+                var shapedAuthorsWithLinks = shapedAuthors.Select(author =>
+                {
+                    var authorAsDictionary = author as IDictionary<string, object>;
+                    var authorLinks = CreateLinksForAuthor(
+                        (Guid)authorAsDictionary["Id"], authorResourceParameters.Fields);
 
-                authorAsDictionary.Add("links", authorLinks);
+                    authorAsDictionary.Add("links", authorLinks);
 
-                return authorAsDictionary;
-            });
+                    return authorAsDictionary;
+                });
 
-            var linkedCollectionResource = new
-            {
-                value = shapedAuthorsWithLinks,
-                links = links
-            };
+                var linkedCollectionResource = new
+                {
+                    value = shapedAuthorsWithLinks,
+                    links = links
+                };
 
-            return Ok(linkedCollectionResource);
+                return Ok(linkedCollectionResource);
+            }
+
+            else{
+                var previousPageLink = authorFromRepository.HasPreviousPage ? 
+                    CreateAuthorResourceUri(authorResourceParameters,
+                    ResourceUriType.PreviousPage) : null;
+
+                var nextPageLink = authorFromRepository.HasNextPage ? 
+                    CreateAuthorResourceUri(authorResourceParameters,
+                    ResourceUriType.NextPage) : null;
+
+                var paginationMetadataForNonSpecifiedMediaType = new
+                {
+                    previousPageLink = previousPageLink,
+                    nextPageLink = nextPageLink,
+                    totalCount = authorFromRepository.TotalCount,
+                    pageSize = authorFromRepository.PageSize,
+                    currentPage = authorFromRepository.CurrentPage,
+                    totalPages = authorFromRepository.TotalPages
+                };
+
+                Response.Headers.Add("X-PaginationHeader",
+                    Newtonsoft.Json.JsonConvert.SerializeObject(paginationMetadataForNonSpecifiedMediaType));
+
+                return Ok(authors.ShapeData(authorResourceParameters.Fields));
+            }            
         }
 
         [HttpGet("api/authors/{id}", Name = "GetAuthor")]
@@ -117,8 +145,33 @@ namespace Library.API.Controllers
             return Ok(linkedResourceToreturn);
         }
 
-        [HttpPost("api/authors")]
+        [HttpPost("api/authors", Name = "CreateAuthor")]
+        [RequestHeaderMatchesMediaType("Content-Type", new [] { "application/vnd.rahul.author.full+json" })]
         public IActionResult CreateAuthor([FromBody] AuthorForCreationDto author)
+        {
+            if (author == null)
+            {
+                return BadRequest();
+            }
+            var authorEntity = _mapper.Map<Author>(author);
+            _libraryRepository.AddAuthor(authorEntity);
+            if (!_libraryRepository.Save())
+            {
+                return StatusCode(500, "A problem occurred while createing the author.");
+            }
+            var authorToReturn = _mapper.Map<AuthorDto>(authorEntity);
+            // pass null as there we not need any data shapeing
+            var links = CreateLinksForAuthor(authorEntity.Id, null);
+            var linkedResourceToReturn = authorToReturn.ShapeData(null) as IDictionary<string, object>;
+            linkedResourceToReturn.Add("links", links);
+            return CreatedAtRoute("GetAuthor", new { id = authorToReturn.Id}, linkedResourceToReturn);
+        }
+
+        [HttpPost("api/authors", Name = "CreateAuthorWithDateOfDeath")]
+        [RequestHeaderMatchesMediaType("Content-Type", 
+            new [] { "application/vnd.rahul.authorwithdateofdeath.full+json",
+                     "application/vnd.rahul.authorwithdateofdeath.full+xml" })]
+        public IActionResult CreateAuthorWithDateOfDeath([FromBody] AuthorForCreationWithDateOfDeathDto author)
         {
             if (author == null)
             {
@@ -148,7 +201,7 @@ namespace Library.API.Controllers
             return NotFound();
         }
 
-        [HttpDelete("api/authors/{id}")]
+        [HttpDelete("api/authors/{id}", Name = "DeleteAuthor")]
         public IActionResult DeleteAuthor(Guid id)
         {
             var authorFromRepo = _libraryRepository.GetAuthor(id);
