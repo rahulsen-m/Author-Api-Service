@@ -12,9 +12,10 @@ namespace Library.API.Models
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => 
                 $"{src.FirstName} {src.LastName}"))
                 .ForMember(dest => dest.Age, opt => opt.MapFrom(src => 
-                src.DateOfBirth.GetCurrentAge()));
+                src.DateOfBirth.GetCurrentAge(src.DateOfDeath)));
             CreateMap<Book, BookDto>();
             CreateMap<AuthorForCreationDto, Author>();
+            CreateMap<AuthorForCreationWithDateOfDeathDto, Author>();
             CreateMap<BookForCreationDto, Book>();
             CreateMap<BookForUpdateDto, Book>();
             CreateMap<Book, BookForUpdateDto>();
