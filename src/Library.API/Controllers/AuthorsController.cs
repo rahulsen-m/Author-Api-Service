@@ -77,7 +77,7 @@ namespace Library.API.Controllers
             Response.Headers.Add("X-Pagination",JsonConvert.SerializeObject(paginationMetadata));
             var authors = _mapper.Map<IEnumerable<AuthorDto>>(authorFromRepository);
 
-            if(mediaType == "application/vnd.marvin.hateoas+json"){
+            if(mediaType == "application/vnd.rahul.hateoas+json"){
                 var links = CreateLinksForAuthors(authorResourceParameters,
                 authorFromRepository.HasNextPage, authorFromRepository.HasPreviousPage);
                 var shapedAuthors = authors.ShapeData(authorResourceParameters.Fields);
@@ -145,8 +145,33 @@ namespace Library.API.Controllers
             return Ok(linkedResourceToreturn);
         }
 
-        [HttpPost("api/authors")]
+        [HttpPost("api/authors", Name = "CreateAuthor")]
+        [RequestHeaderMatchesMediaType("Content-Type", new [] { "application/vnd.rahul.author.full+json" })]
         public IActionResult CreateAuthor([FromBody] AuthorForCreationDto author)
+        {
+            if (author == null)
+            {
+                return BadRequest();
+            }
+            var authorEntity = _mapper.Map<Author>(author);
+            _libraryRepository.AddAuthor(authorEntity);
+            if (!_libraryRepository.Save())
+            {
+                return StatusCode(500, "A problem occurred while createing the author.");
+            }
+            var authorToReturn = _mapper.Map<AuthorDto>(authorEntity);
+            // pass null as there we not need any data shapeing
+            var links = CreateLinksForAuthor(authorEntity.Id, null);
+            var linkedResourceToReturn = authorToReturn.ShapeData(null) as IDictionary<string, object>;
+            linkedResourceToReturn.Add("links", links);
+            return CreatedAtRoute("GetAuthor", new { id = authorToReturn.Id}, linkedResourceToReturn);
+        }
+
+        [HttpPost("api/authors", Name = "CreateAuthorWithDateOfDeath")]
+        [RequestHeaderMatchesMediaType("Content-Type", 
+            new [] { "application/vnd.rahul.authorwithdateofdeath.full+json",
+                     "application/vnd.rahul.authorwithdateofdeath.full+xml" })]
+        public IActionResult CreateAuthorWithDateOfDeath([FromBody] AuthorForCreationWithDateOfDeathDto author)
         {
             if (author == null)
             {
@@ -176,7 +201,7 @@ namespace Library.API.Controllers
             return NotFound();
         }
 
-        [HttpDelete("api/authors/{id}")]
+        [HttpDelete("api/authors/{id}", Name = "DeleteAuthor")]
         public IActionResult DeleteAuthor(Guid id)
         {
             var authorFromRepo = _libraryRepository.GetAuthor(id);

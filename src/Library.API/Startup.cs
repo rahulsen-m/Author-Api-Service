@@ -63,11 +63,29 @@ namespace Library.API
                 // Setting input formatter
                 //setUpAction.InputFormatters.Add(new XmlDataContractSerializerInputFormatter());
 
+                // configure xml input formatter
+                var xmlDataContractSerializerInputFormatter = new XmlDataContractSerializerInputFormatter();
+                xmlDataContractSerializerInputFormatter.SupportedMediaTypes
+                    .Add("application/vnd.rahul.authorwithdateofdeath.full+xml");
+                setUpAction.InputFormatters.Add(xmlDataContractSerializerInputFormatter);
+
+                // configure custom input header
+                var jsonInputFormatter = setUpAction.InputFormatters
+                .OfType<JsonInputFormatter>().FirstOrDefault();
+
+                if (jsonInputFormatter != null)
+                {
+                    jsonInputFormatter.SupportedMediaTypes
+                    .Add("application/vnd.rahul.author.full+json");
+                    jsonInputFormatter.SupportedMediaTypes
+                    .Add("application/vnd.rahul.authorwithdateofdeath.full+json");
+                }
+
                 // configure custom output header
                 var jsonOutputFormatter = setUpAction.OutputFormatters.OfType<JsonOutputFormatter>().FirstOrDefault();
                 if (jsonOutputFormatter != null)
                 {
-                    jsonOutputFormatter.SupportedMediaTypes.Add("application/vnd.marvin.hateoas+json") ;
+                    jsonOutputFormatter.SupportedMediaTypes.Add("application/vnd.rahul.hateoas+json") ;
                 }
             })
             .AddJsonOptions(options => {
@@ -146,7 +164,7 @@ namespace Library.API
             app.UseSwagger();
             app.UseSwaggerUI(c => {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "post API V1");
-                c.RoutePrefix = string.Empty;
+                // c.RoutePrefix = string.Empty;
             });
             DbInitializer.EnsureSeedDataForContext(app);
         }
