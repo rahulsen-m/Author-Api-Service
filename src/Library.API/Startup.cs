@@ -18,6 +18,8 @@ using Swashbuckle.AspNetCore.Swagger;
 using System.Reflection;
 using System.IO;
 using System.Linq;
+using AspNetCoreRateLimit;
+using System.Collections.Generic;
 
 namespace Library.API
 {
@@ -139,10 +141,43 @@ namespace Library.API
 
             // Add response caching related services
             services.AddResponseCaching();
+
+            // register service for adding support to limit the request and for this it required a memory cache to count the request
+            services. AddMemoryCache();
+            // Limit for a particular ip address
+            //services.Configure<IpRateLimitOptions>(Configuration.GetSection("IpRateLimiting"));
+            services.Configure<IpRateLimitOptions>((options) => 
+            {
+                options.GeneralRules = new List<RateLimitRule>()
+                {
+                    new RateLimitRule()
+                    {
+                        // full api endpoints
+                        Endpoint = "*",
+                        // limits 3 requests
+                        Limit = 10,
+                        // in 5 min time span can request resources for 10 times
+                        Period = "5m"
+                    },
+                    new RateLimitRule()
+                    {
+                        Endpoint = "*",
+                        Limit = 2,
+                        Period = "10s"
+                    }
+                };
+            });
+
+            // Register policy store and rate limit counter store
+            services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+            services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+            services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         [Obsolete]
+                
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             // TODO: Update the loging functionality
@@ -184,10 +219,14 @@ namespace Library.API
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "post API V1");
                 c.RoutePrefix = string.Empty;
             });
+            
             // Added cache store in the pipeline. [Must be added before UseHttpCacheHeaders & UseMvc]
             app.UseResponseCaching();
+            // added limit counter service for ip address in the request pipeline
+            app.UseIpRateLimiting();
             // add http header service in the request pipline [Must be added before UseMvc]
             app.UseHttpCacheHeaders();
+            
             app.UseMvc();
             
             DbInitializer.EnsureSeedDataForContext(app);
