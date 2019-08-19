@@ -123,6 +123,19 @@ namespace Library.API
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 c.IncludeXmlComments(xmlPath);
             });
+
+            // TODO:Update caching approach(https://docs.microsoft.com/en-us/aspnet/core/performance/caching/middleware?view=aspnetcore-2.2)
+            // Added http cache header middleware
+            services.AddHttpCacheHeaders(
+            (expirationModelOption) => 
+            {
+                // Added different directices
+                expirationModelOption.MaxAge = 600;;
+            },
+            (validationModelOptions) => 
+            {
+                validationModelOptions.MustRevalidate = true;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -162,12 +175,16 @@ namespace Library.API
             }          
 
             app.UseHttpsRedirection();
-            app.UseMvc();
+            // Added swagger Ui
             app.UseSwagger();
             app.UseSwaggerUI(c => {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "post API V1");
                 c.RoutePrefix = string.Empty;
             });
+            // add http header service in the request pipline
+            app.UseHttpCacheHeaders();
+            app.UseMvc();
+            
             DbInitializer.EnsureSeedDataForContext(app);
         }
     }
