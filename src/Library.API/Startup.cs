@@ -102,6 +102,8 @@ namespace Library.API
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(c =>
             {
+                // Add support for supporting multiple action with same path (api/CreateAuthor)
+                c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
                 c.SwaggerDoc("v1", new Info { 
                     Title = "Author & Book service API", 
                     Version = "v1",
@@ -121,6 +123,22 @@ namespace Library.API
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 c.IncludeXmlComments(xmlPath);
             });
+
+            // TODO:Update caching approach(https://docs.microsoft.com/en-us/aspnet/core/performance/caching/middleware?view=aspnetcore-2.2)
+            // Added http cache header middleware
+            services.AddHttpCacheHeaders(
+            (expirationModelOption) => 
+            {
+                // Added different directices
+                expirationModelOption.MaxAge = 600;;
+            },
+            (validationModelOptions) => 
+            {
+                validationModelOptions.MustRevalidate = true;
+            });
+
+            // Add response caching related services
+            services.AddResponseCaching();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -160,12 +178,18 @@ namespace Library.API
             }          
 
             app.UseHttpsRedirection();
-            app.UseMvc();
+            // Added swagger Ui
             app.UseSwagger();
             app.UseSwaggerUI(c => {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "post API V1");
-                // c.RoutePrefix = string.Empty;
+                c.RoutePrefix = string.Empty;
             });
+            // Added cache store in the pipeline. [Must be added before UseHttpCacheHeaders & UseMvc]
+            app.UseResponseCaching();
+            // add http header service in the request pipline [Must be added before UseMvc]
+            app.UseHttpCacheHeaders();
+            app.UseMvc();
+            
             DbInitializer.EnsureSeedDataForContext(app);
         }
     }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.ActionConstraints;
 
 namespace Library.API.Helpers
 {
+    [AttributeUsage(AttributeTargets.All, Inherited = true, AllowMultiple = true)]
     public class RequestHeaderMatchesMediaTypeAttribute : Attribute, IActionConstraint
     {
         private readonly string[] _mediaTypes;
