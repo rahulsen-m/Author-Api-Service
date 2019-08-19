@@ -8,11 +8,9 @@ namespace Library.API.Controllers
     [Route("api")]
     public class RootController : ControllerBase
     {
-        private IUrlHelper _urlHelper;
 
-        public RootController(IUrlHelper urlHelper)
+        public RootController()
         {
-            _urlHelper = urlHelper;
         }
 
         [HttpGet(Name = "GetRoot")]
@@ -23,17 +21,17 @@ namespace Library.API.Controllers
                 var links = new List<LinkDto>();
 
                 links.Add(
-                  new LinkDto(_urlHelper.Link("GetRoot", new { }),
+                  new LinkDto(this.Url.Link("GetRoot", new { }),
                   "self",
                   "GET"));
     
                 links.Add(
-                 new LinkDto(_urlHelper.Link("GetAuthors", new { }),
+                 new LinkDto(this.Url.Link("GetAuthors", new { }),
                  "authors",
                  "GET"));
 
                 links.Add(
-                  new LinkDto(_urlHelper.Link("CreateAuthor", new { }),
+                  new LinkDto(this.Url.Link("CreateAuthor", new { }),
                   "create_author",
                   "POST"));
 

@@ -102,6 +102,8 @@ namespace Library.API
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(c =>
             {
+                // Add support for supporting multiple action with same path (api/CreateAuthor)
+                c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
                 c.SwaggerDoc("v1", new Info { 
                     Title = "Author & Book service API", 
                     Version = "v1",
@@ -164,7 +166,7 @@ namespace Library.API
             app.UseSwagger();
             app.UseSwaggerUI(c => {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "post API V1");
-                // c.RoutePrefix = string.Empty;
+                c.RoutePrefix = string.Empty;
             });
             DbInitializer.EnsureSeedDataForContext(app);
         }
