@@ -32,15 +32,18 @@ We will add the snapshort and the request url when we will be done with the deve
 
 **Shaping**
 
+**HEAT OS**
+
+**Versioning**
+
+**Support other media types excepts json**
+
 and others will be added as we will progress
 
 # Roadmap
 
 We will add the following features/tools in the application 
 
-- HEAT OS
-- Versioning
-- Support other media types excepts json
 - caching
 - Logger
 - Swagger
