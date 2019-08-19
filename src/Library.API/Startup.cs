@@ -212,7 +212,7 @@ namespace Library.API
                 });
             }          
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
             // Added swagger Ui
             app.UseSwagger();
             app.UseSwaggerUI(c => {
