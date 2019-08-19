@@ -136,6 +136,9 @@ namespace Library.API
             {
                 validationModelOptions.MustRevalidate = true;
             });
+
+            // Add response caching related services
+            services.AddResponseCaching();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -181,7 +184,9 @@ namespace Library.API
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "post API V1");
                 c.RoutePrefix = string.Empty;
             });
-            // add http header service in the request pipline
+            // Added cache store in the pipeline. [Must be added before UseHttpCacheHeaders & UseMvc]
+            app.UseResponseCaching();
+            // add http header service in the request pipline [Must be added before UseMvc]
             app.UseHttpCacheHeaders();
             app.UseMvc();
             
