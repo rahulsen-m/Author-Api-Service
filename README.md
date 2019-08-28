@@ -38,15 +38,17 @@ We will add the snapshort and the request url when we will be done with the deve
 
 **Support other media types excepts json**
 
+**Swagger**
+
+**caching**
+
 and others will be added as we will progress
 
 # Roadmap
 
 We will add the following features/tools in the application 
 
-- caching
 - Logger
-- Swagger
 - Docker
 - CI & CD pipeline
 
